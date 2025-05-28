@@ -1,0 +1,62 @@
+<!-- qr_management.html -->
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>QR Code Management</title>
+  <link rel="stylesheet" href="{% static 'attendance/dashboard.css' %}" />
+</head>
+<body>
+  <div class="dashboard-container">
+    <aside class="sidebar">
+      <h2>Admin Dashboard</h2>
+      <ul>
+        <li><a href="{% url 'admin_dashboard' %}">Dashboard</a></li>
+        <li><a href="{% url 'user_management' %}">User Management</a></li>
+        <li><a href="{% url 'attendance_management' %}">Attendance Management</a></li>
+        <li><a href="{% url 'admin_attendance' %}">Attendance</a></li>
+        <li><a href="{% url 'qr_management' %}" class="active">QR Code Management</a></li>
+        <li>
+          <form method="post" action="{% url 'logout' %}">
+            {% csrf_token %}
+            <button type="submit" class="logout-button">Logout</button>
+          </form>
+        </li>
+      </ul>
+    </aside>
+
+    <main class="main-content">
+      <h1>QR Code Management</h1>
+      {% if users %}
+        <table class="attendance-table">
+          <thead>
+            <tr>
+              <th>Username</th>
+              <th>Email</th>
+              <th>QR Code</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for user in users %}
+              <tr>
+                <td>{{ user.username }}</td>
+                <td>{{ user.email }}</td>
+                <td>
+                  {% if user.userqrcode and user.userqrcode.qr_code_image %}
+                    <img src="{{ user.userqrcode.qr_code_image.url }}" alt="QR Code for {{ user.username }}" width="100" />
+                  {% else %}
+                    <span>No QR Code</span>
+                  {% endif %}
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <p class="no-records">No users found.</p>
+      {% endif %}
+    </main>
+  </div>
+</body>
+</html>

@@ -1,0 +1,93 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Admin Dashboard - Barangay Attendance</title>
+  <link rel="stylesheet" href="{% static 'attendance/dashboard.css' %}" />
+</head>
+<body>
+  <div class="dashboard-container">
+    <aside class="sidebar">
+      <h2>Admin Panel</h2>
+      <ul>
+        <li><a href="{% url 'admin_dashboard' %}" class="active">Dashboard</a></li>
+        <li><a href="{% url 'user_management' %}">User Management</a></li>
+        <li><a href="{% url 'attendance_management' %}">Attendance Management</a></li>
+        <li><a href="{% url 'admin_attendance' %}">Attendance</a></li>
+        <li><a href="{% url 'qr_management' %}">QR Code Management</a></li>
+        <li>
+          <form method="post" action="{% url 'logout' %}">
+            {% csrf_token %}
+            <button type="submit" class="logout-button">Logout</button>
+          </form>
+        </li>
+      </ul>
+    </aside>
+
+    <main class="main-content">
+      <h1>Welcome, {{ request.user.username }}!</h1>
+
+      <h2>Overview Stats</h2>
+      <div style="display: flex; gap: 30px; margin-bottom: 30px;">
+        <div style="background: #0066ff; color: white; padding: 20px; border-radius: 12px; flex: 1; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+          <h3>Total Users</h3>
+          <p style="font-size: 2rem; font-weight: 700;">{{ total_users }}</p>
+        </div>
+        <div style="background: #0044cc; color: white; padding: 20px; border-radius: 12px; flex: 1; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+          <h3>Attendance Today</h3>
+          <p style="font-size: 2rem; font-weight: 700;">{{ attendance_today }}</p>
+        </div>
+      </div>
+
+      <h2>Attendance Records</h2>
+      <table border="1" cellpadding="8" cellspacing="0" style="width:100%; max-width: 1000px; margin-top: 10px; border-collapse: collapse; border-radius: 12px; overflow: hidden;">
+        <thead style="background-color: #0044cc; color: white;">
+          <tr>
+            <th style="padding: 12px;">User</th>
+            <th style="padding: 12px;">Date</th>
+            <th style="padding: 12px;">Time In (AM)</th>
+            <th style="padding: 12px;">Time Out (AM)</th>
+            <th style="padding: 12px;">Time In (PM)</th>
+            <th style="padding: 12px;">Time Out (PM)</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for record in attendance_page %}
+          <tr style="border-bottom: 1px solid #ddd;">
+            <td style="padding: 10px;">{{ record.user.username }}</td>
+            <td style="padding: 10px;">
+              {% if record.date %}
+                {{ record.date|date:"M d, Y" }}
+              {% else %}
+                <span style="color:red;">No Date</span>
+              {% endif %}
+            </td>
+            <td style="padding: 10px;">{{ record.time_in_am|default:"—" }}</td>
+            <td style="padding: 10px;">{{ record.time_out_am|default:"—" }}</td>
+            <td style="padding: 10px;">{{ record.time_in_pm|default:"—" }}</td>
+            <td style="padding: 10px;">{{ record.time_out_pm|default:"—" }}</td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="6" style="text-align:center; padding: 15px;">No attendance records found.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+
+      <div class="pagination" style="margin-top: 20px; text-align: center;">
+        {% if attendance_page.has_previous %}
+          <a href="?page=1">&laquo; First</a>
+          <a href="?page={{ attendance_page.previous_page_number }}">&lt; Prev</a>
+        {% endif %}
+
+        <span style="margin: 0 12px; font-weight: 700;">Page {{ attendance_page.number }} of {{ attendance_page.paginator.num_pages }}</span>
+
+        {% if attendance_page.has_next %}
+          <a href="?page={{ attendance_page.next_page_number }}">Next &gt;</a>
+          <a href="?page={{ attendance_page.paginator.num_pages }}">Last &raquo;</a>
+        {% endif %}
+      </div>
+    </main>
+  </div>
+</body>
+</html>

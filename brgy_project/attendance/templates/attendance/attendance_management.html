@@ -1,0 +1,90 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Attendance Management - Admin Dashboard</title>
+  <link rel="stylesheet" href="{% static 'attendance/dashboard.css' %}" />
+  <style>
+    /* Simple styling for export button */
+    .export-excel-btn {
+      background-color: #28a745;
+      color: white;
+      border: none;
+      padding: 10px 16px;
+      margin-bottom: 20px;
+      font-size: 16px;
+      cursor: pointer;
+      border-radius: 4px;
+      transition: background-color 0.3s ease;
+      text-decoration: none;
+      display: inline-block;
+    }
+    .export-excel-btn:hover {
+      background-color: #218838;
+    }
+  </style>
+</head>
+<body>
+  <div class="dashboard-container">
+    <aside class="sidebar">
+      <h2>Admin Dashboard</h2>
+      <ul>
+        <li><a href="{% url 'admin_dashboard' %}">Dashboard</a></li>
+        <li><a href="{% url 'user_management' %}">User Management</a></li>
+        <li><a href="{% url 'attendance_management' %}" class="active">Attendance Management</a></li>
+        <li><a href="{% url 'admin_attendance' %}">Attendance</a></li>
+        <li><a href="{% url 'qr_management' %}">QR Code Management</a></li>
+        <li>
+          <form method="post" action="{% url 'logout' %}">
+            {% csrf_token %}
+            <button type="submit" class="logout-button">Logout</button>
+          </form>
+        </li>
+      </ul>
+    </aside>
+
+    <main class="main-content">
+      <h1>Attendance Management</h1>
+
+      <!-- Export Excel Button -->
+      <a href="{% url 'export_attendance_excel' %}" class="export-excel-btn">Export Today's Attendance as Excel</a>
+
+      {% if attendance_management %}
+      <table class="attendance-table" border="1" cellpadding="8" cellspacing="0" style="width: 100%; max-width: 700px; border-collapse: collapse;">
+        <thead style="background-color: #0044cc; color: white;">
+          <tr>
+            <th style="padding: 10px;">Username</th>
+            <th style="padding: 10px;">Date</th>
+            <th style="padding: 10px;">Time In (AM)</th>
+            <th style="padding: 10px;">Time Out (AM)</th>
+            <th style="padding: 10px;">Time In (PM)</th>
+            <th style="padding: 10px;">Time Out (PM)</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for record in attendance_management %}
+          <tr>
+            <td style="padding: 10px;">{{ record.user.username }}</td>
+            <td style="padding: 10px;">
+              {% if record.date %}
+                {{ record.date|date:"M d, Y" }}
+              {% else %}
+                <span style="color:red;">No Date</span>
+              {% endif %}
+            </td>
+            <td style="padding: 10px;">{{ record.time_in_am|default:"—" }}</td>
+            <td style="padding: 10px;">{{ record.time_out_am|default:"—" }}</td>
+            <td style="padding: 10px;">{{ record.time_in_pm|default:"—" }}</td>
+            <td style="padding: 10px;">{{ record.time_out_pm|default:"—" }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+        <p class="no-records" style="text-align:center; padding: 15px;">No attendance records found.</p>
+      {% endif %}
+    </main>
+  </div>
+</body>
+</html>

@@ -1,0 +1,86 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Scan QR Code - Barangay Attendance</title>
+  <link rel="stylesheet" href="{% static 'attendance/dashboard.css' %}" />
+  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+</head>
+<body>
+  <div class="dashboard-container">
+    <aside class="sidebar">
+      <h2>Barangay</h2>
+      <ul>
+        <li><a href="{% url 'dashboard' %}">Dashboard</a></li>
+        <li><a href="{% url 'user_attendance' %}" class="active">Attendance</a></li>
+        <li><a href="{% url 'profile' %}">Profile</a></li>
+        <li>
+          <form method="post" action="{% url 'logout' %}">
+            {% csrf_token %}
+            <button type="submit" class="logout-button">Logout</button>
+          </form>
+        </li>
+      </ul>
+    </aside>
+
+    <main class="main-content">
+      <h2>Scan QR Code</h2>
+      <div id="reader" style="width: 300px; max-width: 100%;"></div>
+      <div id="result" style="margin-top: 15px; font-weight: bold;"></div>
+      <button id="retry-btn" style="display:none; margin-top: 10px;">Scan Again</button>
+      <a href="{% url 'dashboard' %}" class="btn" style="display:block; margin-top:20px;">Back to Dashboard</a>
+    </main>
+  </div>
+
+  <script>
+    const resultElem = document.getElementById('result');
+    const retryBtn = document.getElementById('retry-btn');
+
+    function onScanSuccess(decodedText, decodedResult) {
+      // Show scanned QR code
+      resultElem.innerText = `Scanned: ${decodedText}`;
+
+      // Stop the scanner to avoid multiple scans
+      html5QrcodeScanner.clear().then(() => {
+        // Send QR code data to backend
+        fetch("{% url 'mark_attendance' %}", {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': '{{ csrf_token }}'  // Add CSRF token header for security if needed
+          },
+          body: `qr_data=${encodeURIComponent(decodedText)}`
+        })
+        .then(response => response.json())
+        .then(data => {
+          resultElem.innerText = data.message;
+          retryBtn.style.display = 'inline-block';
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          resultElem.innerText = 'Error marking attendance.';
+          retryBtn.style.display = 'inline-block';
+        });
+      });
+    }
+
+    function onScanFailure(error) {
+      // Optionally handle scan failure
+      // console.warn(`Scan failure: ${error}`);
+    }
+
+    const html5QrcodeScanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: 250 });
+
+    // Start the QR scanner initially
+    html5QrcodeScanner.render(onScanSuccess, onScanFailure);
+
+    // Retry button restarts the scanner
+    retryBtn.addEventListener('click', () => {
+      resultElem.innerText = '';
+      retryBtn.style.display = 'none';
+      html5QrcodeScanner.render(onScanSuccess, onScanFailure);
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,31 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Login - Barangay Attendance</title>
+  <link rel="stylesheet" href="{% static 'attendance/styles.css' %}">
+</head>
+<body>
+  <div class="container">
+    <div class="left-panel">
+      <h1>Barangay Attendance</h1>
+      <form method="post" action="{% url 'login' %}">
+        {% csrf_token %}
+        <label for="username">Username</label>
+        <input type="text" id="username" name="username" required autocomplete="username" />
+
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" required autocomplete="current-password" />
+
+        <button type="submit" class="login-btn">Login</button>
+      </form>
+      <div class="signup-text">
+        Don't have an account? <a href="{% url 'signup' %}">Sign Up?</a>
+      </div>
+    </div>
+    <div class="right-panel"></div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,45 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Edit User - Admin Dashboard</title>
+  <link rel="stylesheet" href="{% static 'attendance/dashboard.css' %}" />
+</head>
+<body>
+  <div class="dashboard-container">
+    <aside class="sidebar">
+      <h2>Admin Dashboard</h2>
+      <ul>
+        <li><a href="{% url 'admin_dashboard' %}">Dashboard</a></li>
+        <li><a href="{% url 'user_management' %}">User Management</a></li>
+        <li><a href="{% url 'attendance_management' %}">Attendance Management</a></li>
+        <li><a href="{% url 'admin_attendance' %}">Attendance</a></li>
+        <li><a href="{% url 'qr_management' %}">QR Code Management</a></li>
+        <li><a href="{% url 'logout' %}">Logout</a></li>
+      </ul>
+    </aside>
+
+    <main class="main-content">
+      <h1>Edit User: {{ user.username }}</h1>
+      <form method="post">
+        {% csrf_token %}
+        <label>Username:</label><br />
+        <input type="text" name="username" value="{{ user.username }}" required /><br />
+        
+        <label>Email:</label><br />
+        <input type="email" name="email" value="{{ user.email }}" /><br />
+        
+        <label>Is Staff:</label>
+        <input type="checkbox" name="is_staff" {% if user.is_staff %}checked{% endif %} /><br />
+        
+        <label>Is Active:</label>
+        <input type="checkbox" name="is_active" {% if user.is_active %}checked{% endif %} /><br /><br />
+        
+        <button type="submit" class="primary-button">Save Changes</button>
+        <a href="{% url 'user_management' %}">Cancel</a>
+      </form>
+    </main>
+  </div>
+</body>
+</html>

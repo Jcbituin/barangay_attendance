@@ -1,0 +1,194 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Admin QR Code Scanner - Barangay Attendance</title>
+  <link rel="stylesheet" href="{% static 'attendance/dashboard.css' %}" />
+  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f7f9fc;
+      margin: 0;
+      padding: 0;
+    }
+    .dashboard-container {
+      display: flex;
+      min-height: 100vh;
+    }
+    aside.sidebar {
+      background-color: #004080;
+      color: white;
+      width: 220px;
+      padding: 20px;
+      box-sizing: border-box;
+    }
+    aside.sidebar h2 {
+      margin-bottom: 20px;
+    }
+    aside.sidebar ul {
+      list-style: none;
+      padding: 0;
+    }
+    aside.sidebar ul li {
+      margin-bottom: 15px;
+    }
+    aside.sidebar ul li a {
+      color: white;
+      text-decoration: none;
+      font-weight: 600;
+      display: block;
+      padding: 8px 12px;
+      border-radius: 4px;
+    }
+    aside.sidebar ul li a.active,
+    aside.sidebar ul li a:hover {
+      background-color: #0066cc;
+    }
+    main.main-content {
+      flex-grow: 1;
+      padding: 40px 30px;
+      background-color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    h2 {
+      margin-bottom: 40px;
+      color: #004080;
+    }
+    #reader {
+      width: 400px;
+      max-width: 100%;
+      border-radius: 10px;
+      border: 3px solid #004080;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+    .btn {
+      margin-top: 30px;
+      padding: 12px 25px;
+      font-size: 18px;
+      background-color: #0066cc;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background-color 0.3s ease;
+    }
+    .btn:hover {
+      background-color: #004999;
+    }
+    .alert {
+      margin-top: 20px;
+      font-weight: bold;
+      min-height: 24px;
+      width: 400px;
+      text-align: center;
+      color: #d8000c; /* default red */
+      transition: color 0.3s ease;
+    }
+    .logout-button {
+      background: none;
+      border: none;
+      color: #fff;
+      cursor: pointer;
+      padding: 0;
+      font-family: inherit;
+      text-align: left;
+      font-size: 1em;
+    }
+    .logout-button:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="dashboard-container">
+    <aside class="sidebar">
+      <h2>Admin Dashboard</h2>
+      <ul>
+        <li><a href="{% url 'admin_dashboard' %}">Dashboard</a></li>
+        <li><a href="{% url 'user_management' %}">User Management</a></li>
+        <li><a href="{% url 'attendance_management' %}">Attendance Management</a></li>
+        <li><a href="{% url 'admin_attendance' %}">Attendance</a></li>
+        <li><a href="{% url 'qr_management' %}">QR Code Management</a></li>
+        <li>
+          <form method="post" action="{% url 'logout' %}">
+            {% csrf_token %}
+            <button type="submit" class="logout-button">Logout</button>
+          </form>
+        </li>
+      </ul>
+    </aside>
+
+    <main class="main-content">
+      <h2>Admin QR Code Scanner</h2>
+      <div id="reader"></div>
+      <div id="scan-result" class="alert"></div>
+      <a href="{% url 'admin_attendance' %}" class="btn">Back to Attendance</a>
+    </main>
+  </div>
+
+  <script>
+    // Grab CSRF token from cookie (standard Django approach)
+    function getCookie(name) {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+          const cookie = cookies[i].trim();
+          // Does this cookie string begin with the name we want?
+          if (cookie.substring(0, name.length + 1) === (name + '=')) {
+            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+            break;
+          }
+        }
+      }
+      return cookieValue;
+    }
+
+    const csrftoken = getCookie('csrftoken');
+
+    function onScanSuccess(decodedText, decodedResult) {
+      const resultElem = document.getElementById('scan-result');
+      resultElem.style.color = '#004080'; // reset to normal blue color
+      resultElem.innerText = `Scanned: ${decodedText}`;
+
+      fetch("{% url 'mark_attendance' %}", {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'X-CSRFToken': csrftoken
+        },
+        body: `qr_data=${encodeURIComponent(decodedText)}`
+      })
+      .then(res => res.json())
+      .then(data => {
+        resultElem.style.color = data.success ? 'green' : '#d8000c';
+        resultElem.innerText = data.message;
+      })
+      .catch(error => {
+        resultElem.style.color = '#d8000c';
+        resultElem.innerText = 'Error marking attendance.';
+        console.error('Error:', error);
+      });
+
+      html5QrcodeScanner.clear();
+    }
+
+    function onScanFailure(error) {
+      // Optionally log or handle scan errors here
+      // console.warn(`QR Scan error: ${error}`);
+    }
+
+    const html5QrcodeScanner = new Html5QrcodeScanner("reader", {
+      fps: 10,
+      qrbox: 250
+    });
+    html5QrcodeScanner.render(onScanSuccess, onScanFailure);
+  </script>
+</body>
+</html>

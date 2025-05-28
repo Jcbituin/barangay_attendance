@@ -1,0 +1,154 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Dashboard - Barangay Attendance</title>
+  <link rel="stylesheet" href="{% static 'attendance/dashboard.css' %}" />
+  <style>
+    .today-highlight {
+      color: #0066ff;
+      font-weight: bold;
+      margin-left: 8px;
+      font-size: 0.9em;
+    }
+    .no-records {
+      text-align: center;
+      padding: 15px;
+      color: #666;
+    }
+    .attendance-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .attendance-table th, .attendance-table td {
+      padding: 10px;
+      border: 1px solid #ddd;
+      text-align: center;
+    }
+    .attendance-table th {
+      background-color: #0044cc;
+      color: white;
+    }
+    .messages {
+      margin-bottom: 20px;
+      padding: 10px;
+      border-radius: 5px;
+    }
+    .messages li {
+      list-style: none;
+    }
+    .messages li.success {
+      color: green;
+    }
+    .messages li.info {
+      color: #0066cc;
+    }
+    form.record-attendance {
+      margin-bottom: 20px;
+    }
+    form.record-attendance button {
+      padding: 10px 20px;
+      background-color: #0044cc;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    form.record-attendance button:hover {
+      background-color: #0033aa;
+    }
+  </style>
+</head>
+<body>
+  <div class="dashboard-container">
+    <aside class="sidebar">
+      <h2>Barangay</h2>
+      <ul>
+        <li><a href="{% url 'dashboard' %}" class="active">Dashboard</a></li>
+        <li><a href="{% url 'user_attendance' %}">Attendance</a></li>
+        <li><a href="{% url 'profile' %}">Profile</a></li>
+        <li>
+          <form method="post" action="{% url 'logout' %}">
+            {% csrf_token %}
+            <button type="submit" class="logout-button">Logout</button>
+          </form>
+        </li>
+      </ul>
+    </aside>
+
+    <main class="main-content">
+      <h1>Welcome, {{ request.user.username }}!</h1>
+
+      <!-- Live Clock -->
+      <div style="font-weight: bold; font-size: 1.2em; margin-bottom: 20px;">
+        Current Time: <span id="liveClock"></span>
+      </div>
+
+      <p>This is your dashboard. Use the sidebar to navigate.</p>
+
+      <!-- Attendance recording form -->
+      <form method="post" class="record-attendance">
+        {% csrf_token %}
+        <button type="submit">Record Attendance Now</button>
+      </form>
+
+      <!-- Messages -->
+      {% if messages %}
+        <ul class="messages">
+          {% for message in messages %}
+            <li class="{{ message.tags }}">{{ message }}</li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+
+      <h2 style="margin-top: 30px;">📋 Your Attendance Records</h2>
+      <div style="overflow-x: auto;">
+        <table class="attendance-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Time In (AM)</th>
+              <th>Time Out (AM)</th>
+              <th>Time In (PM)</th>
+              <th>Time Out (PM)</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for record in attendance_record %}
+              {% if record.date %}
+                <tr>
+                  <td>
+                    {{ record.date|date:"M d, Y" }}
+                    {% if record.date|date:"Y-m-d" == today|date:"Y-m-d" %}
+                      <span class="today-highlight">(Today)</span>
+                    {% endif %}
+                  </td>
+                  <td>{{ record.time_in_am|default:"—" }}</td>
+                  <td>{{ record.time_out_am|default:"—" }}</td>
+                  <td>{{ record.time_in_pm|default:"—" }}</td>
+                  <td>{{ record.time_out_pm|default:"—" }}</td>
+                </tr>
+              {% endif %}
+            {% empty %}
+              <tr>
+                <td colspan="5" class="no-records">No attendance records found.</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    function updateClock() {
+      const clockElement = document.getElementById('liveClock');
+      const now = new Date();
+      clockElement.textContent = now.toLocaleTimeString();
+    }
+    setInterval(updateClock, 1000);
+    updateClock(); // initial call
+  </script>
+</body>
+</html>
